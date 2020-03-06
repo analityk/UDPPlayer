@@ -52,23 +52,32 @@ namespace ConsoleApp1DNS
         static void Main(string[] args)
         {
 
+            // adres i port mikrokontrolera w sieci lokalnej  
             ct = new Client("192.168.1.20", 52001);
 
             while (true)
             {
 
+                // w tym folderze znajduja sie pliki z muzyka
                 string folder_search = @"I:\Różne";
 
                 List<KeyValuePair<int, string>> dircnt = new List<KeyValuePair<int, string>>();
 
+
+                // pliki licze od 1, 0 nie jest numerem pliku,
                 int files_cnt = 1;
                 int fileKey = 0;
 
+
+                // wczytuje pliki .mp3 z lokalizacji i nadaje im numer
                 foreach (string file in Directory.EnumerateFiles(folder_search, "*.mp3"))
                 {
                     dircnt.Add(new KeyValuePair<int, string>(files_cnt++, file));
                 }
 
+
+                // prezentuje pliki mozliwe do odtworzenia, po 20 na raz, az zostanie wybrana wartosc wieksza niz 
+                // zero i nie wieksza niz liczba utworow w katalogu 
                 do
                 {
                     int writeFileCnt = 0;
@@ -91,8 +100,9 @@ namespace ConsoleApp1DNS
                     }
                 } while (fileKey == 0);
 
-                string fileToPlay = "";
 
+                // wyswietlam nazwe wybranego pliku 
+                string fileToPlay = "";
 
                 foreach (var r in dircnt)
                 {
@@ -106,6 +116,9 @@ namespace ConsoleApp1DNS
                 Console.WriteLine(fileToPlay);
                 
 
+
+                // w podanej lokalizacji tworze plik .wav, zawierajacy wartosci probek dzwieku
+                // te dane sa wysylane w swiat
                 var outfile = @"C:\naudio_test\test_wav.wav";
 
                 using (var reader = new Mp3FileReader(fileToPlay))
@@ -115,6 +128,7 @@ namespace ConsoleApp1DNS
 
                 byte[] test_array = File.ReadAllBytes(outfile);
 
+                // zasadniczo samplerate = 44100
                 int SampleRate = (int)test_array[25] * 256 + (int)test_array[24];
 
 
@@ -138,27 +152,35 @@ namespace ConsoleApp1DNS
 
                 bool blok = true;
 
-                do
-                {
-                    byte[] st = new byte[10];
+
+                
+                //// wysyla dane testujace polaczenie az okaze sie, ze te jest stabilne
+                //do
+                //{
+                //    byte[] st = new byte[10];
                     
-                    for (int i = 0; i < 10; i++)
-                    {
-                        st[i] = 1;
-                    }
+                //    for (int i = 0; i < 10; i++)
+                //    {
+                //        st[i] = 1;
+                //    }
 
-                    var sr = ct.Send(st);
+                //    ct.Send(st);
 
-                    if (sr[0] == 0xAA)
-                    {
-                        blok = false;
-                    }
+                //    Thread.Sleep(10);
+
+                //    var sr = ct.udp.Receive(ref ct.hostEndPoint);
+
+                //    if (sr[0] == 0xAA)
+                //    {
+                //        blok = false;
+                //    }
+
+                //} while (blok);
+
+                //Console.WriteLine("połączenie odnowione");
 
 
-                } while (blok);
-
-                Console.WriteLine("połączenie odnowione");
-
+                // tu zaczyna sie odtwarzanie, czyli wysylanie paczek z dzwiekiem do uC, z uC do kodeka i z kodeka do glosnikow
                 while ((test_offset + 1044) < test_array.Length)
                 {
 
@@ -176,6 +198,8 @@ namespace ConsoleApp1DNS
                         ConsoleKeyInfo key = Console.ReadKey(true);
                         switch (key.Key)
                         {
+
+                            // przewija do przodu
                             case ConsoleKey.M:
                                 {
                                     int dx = (int)Math.Truncate( (double) (test_array.Length / 100));
@@ -191,6 +215,7 @@ namespace ConsoleApp1DNS
                                     break;
                                 }
 
+                            // przewija do tylu
                             case ConsoleKey.Z:
                                 {
                                     int dx = (int)Math.Truncate((double)(test_array.Length / 100));
@@ -205,6 +230,7 @@ namespace ConsoleApp1DNS
                                     break;
                                 }
 
+                            // pausa az do ponownego wcisniecia czekolowiek
                             case ConsoleKey.H:
 
                                 byte[] pps = new byte[1001];
@@ -222,7 +248,7 @@ namespace ConsoleApp1DNS
 
                                 break;
 
-
+                            //konczy prace, ale zanim to zrobi informuje uC o zatrzymaniu odtwarzania oraz czysci bufor nadawania do kodeka
                             case ConsoleKey.Escape:
                                 {
                                     for (int i = 0; i < 10; i++)
@@ -252,25 +278,28 @@ namespace ConsoleApp1DNS
                                     break;
                                 }
 
+                            // wysyla w bajcie kontrolnym info, zeby kodek gral glosniej
                             case ConsoleKey.V:
                                 {
                                     ps[1000] = 1;
                                     break;
                                 }
 
+                            // kodek ma wejscia analogowe tu mozna je podglosnic
                             case ConsoleKey.A:
                                 {
                                     ps[1000] = 4;
                                     break;
                                 }
 
-
+                            // kodek ma wejscia analogowe tu mozna je sciszyc
                             case ConsoleKey.Q:
                                 {
                                     ps[1000] = 5;
                                     break;
                                 }
 
+                            // wysyla w bajcie kontrolnym info, zeby kodek gral ciszej
                             case ConsoleKey.L:
                                 {
                                     ps[1000] = 2;
@@ -280,7 +309,7 @@ namespace ConsoleApp1DNS
                         }
                     }
 
-
+                    // wysyla paczke danych i czeka na odpowiedz z uC
                     var r = ct.Send(ps);
 
                     //if (r[3] > 0)
@@ -291,9 +320,12 @@ namespace ConsoleApp1DNS
 
                     double pr = 100.0 * (double)(test_offset) / (double)test_array_offset;
 
+                    //pokazuje ile % pliku juz zostalo odtworzonych
                     Console.WriteLine(test_offset + " B of " + test_array_offset + " B = " + Math.Round(pr, 2) + " %");
                 }
 
+
+                // na koniec utworu czysci bufor nadajnika do kodeka
                 for (int i = 0; i < 10; i++)
                 {
                     byte[] ps = new byte[1001];
@@ -307,6 +339,7 @@ namespace ConsoleApp1DNS
                     var r = ct.Send(ps);
                 }
 
+                // na koniec wylacza rowniez dma w uC - uC moze isc spac
                 byte[] pend = new byte[1001];
 
                 for (int n = 0; n < 1000; n++)
