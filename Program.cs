@@ -96,6 +96,10 @@ namespace ConsoleApp1DNS
                             {
                                 break;
                             }
+                            if(s == "e")
+                            {
+                                System.Environment.Exit(0);
+                            }
                         };
                     }
                 } while (fileKey == 0);
@@ -153,29 +157,26 @@ namespace ConsoleApp1DNS
                 bool blok = true;
 
 
-                
-                //// wysyla dane testujace polaczenie az okaze sie, ze te jest stabilne
-                //do
-                //{
-                //    byte[] st = new byte[10];
+
+                // wysyla dane testujace polaczenie az okaze sie, ze te jest stabilne
+                do
+                {
+                    byte[] st = new byte[10];
+
+                    for (int i = 0; i < 10; i++)
+                    {
+                        st[i] = 1;
+                    }
+
+                    var sr = ct.Send(st);
+
                     
-                //    for (int i = 0; i < 10; i++)
-                //    {
-                //        st[i] = 1;
-                //    }
+                    if (sr[0] == 0xAA)
+                    {
+                        blok = false;
+                    }
 
-                //    ct.Send(st);
-
-                //    Thread.Sleep(10);
-
-                //    var sr = ct.udp.Receive(ref ct.hostEndPoint);
-
-                //    if (sr[0] == 0xAA)
-                //    {
-                //        blok = false;
-                //    }
-
-                //} while (blok);
+                } while (blok);
 
                 //Console.WriteLine("połączenie odnowione");
 
@@ -275,6 +276,36 @@ namespace ConsoleApp1DNS
 
                                     var rndesc = ct.Send(escpend);
                                     System.Environment.Exit(0);
+                                    break;
+                                }
+
+                            case ConsoleKey.P:
+                                {
+                                    for (int i = 0; i < 10; i++)
+                                    {
+                                        byte[] esc = new byte[1001];
+
+                                        for (int n = 0; n < 1001; n++)
+                                        {
+                                            esc[n] = 0;
+                                        }
+
+
+                                        var resc = ct.Send(ps);
+                                    }
+
+                                    byte[] escpend = new byte[1001];
+
+                                    for (int n = 0; n < 1000; n++)
+                                    {
+                                        escpend[n] = 0;
+                                    }
+
+                                    escpend[1000] = 3;
+
+                                    var rndesc = ct.Send(escpend);
+
+                                    test_offset = test_array.Length;
                                     break;
                                 }
 
