@@ -11,6 +11,7 @@ using NLayer;
 using NAudio.Wave;
 using System.IO;
 
+
 namespace ConsoleApp1DNS
 {
 
@@ -47,19 +48,53 @@ namespace ConsoleApp1DNS
         static public UInt64 memcnt = 0;
         static public bool connection_ok = false;
 
+        static public string htm_page_path = @"C:\Users\Szymon\Downloads\Highcharts-8.2.0\examples\line-basic\index.htm";
+        static public string pre_htm = @"C:\Users\Szymon\Downloads\Highcharts-8.2.0\examples\line-basic\pre.txt";
+        static public string data_htm = @"C:\Users\Szymon\Downloads\Highcharts-8.2.0\examples\line-basic\data.txt";
+        static public string past_htm = @"C:\Users\Szymon\Downloads\Highcharts-8.2.0\examples\line-basic\past.txt";
+
         static public Client ct;
+
+
+        static void RefreshChart(Int32[] t)
+        {
+            StreamReader pre = new StreamReader(pre_htm);
+            string pre_str = pre.ReadToEnd();
+
+            string s = "";
+            
+            foreach(Int32 i in t)
+            {
+                s += i.ToString() + ",";
+            }
+
+            StreamReader past = new StreamReader(past_htm);
+            string past_str = past.ReadToEnd();
+
+            StreamWriter sw = new StreamWriter(htm_page_path);
+
+            sw.Write(pre_str);
+            sw.Write(s);
+            sw.Write(past_str);
+            sw.Close();
+
+            pre.Close();
+            past.Close();
+        }
 
         static void Main(string[] args)
         {
 
+            
+
             // adres i port mikrokontrolera w sieci lokalnej  
-            ct = new Client("192.168.1.20", 52001);
+            ct = new Client("192.168.0.20", 52001);
 
             while (true)
             {
 
                 // w tym folderze znajduja sie pliki z muzyka
-                string folder_search = @"I:\Różne";
+                string folder_search = @"G:\Różne";
 
                 List<KeyValuePair<int, string>> dircnt = new List<KeyValuePair<int, string>>();
 
@@ -158,25 +193,25 @@ namespace ConsoleApp1DNS
 
 
 
-                // wysyla dane testujace polaczenie az okaze sie, ze te jest stabilne
-                do
-                {
-                    byte[] st = new byte[10];
+                //// wysyla dane testujace polaczenie az okaze sie, ze te jest stabilne
+                //do
+                //{
+                //    byte[] st = new byte[10];
 
-                    for (int i = 0; i < 10; i++)
-                    {
-                        st[i] = 1;
-                    }
+                //    for (int i = 0; i < 10; i++)
+                //    {
+                //        st[i] = 1;
+                //    }
 
-                    var sr = ct.Send(st);
+                //    var sr = ct.Send(st);
 
                     
-                    if (sr[0] == 0xAA)
-                    {
-                        blok = false;
-                    }
+                //    if (sr[0] == 0xAA)
+                //    {
+                //        blok = false;
+                //    }
 
-                } while (blok);
+                //} while (blok);
 
                 //Console.WriteLine("połączenie odnowione");
 
@@ -343,12 +378,25 @@ namespace ConsoleApp1DNS
                     // wysyla paczke danych i czeka na odpowiedz z uC
                     var r = ct.Send(ps);
 
-                    //if (r[3] > 0)
-                    //{
-                    //    Console.WriteLine("XDMAC error " + r[0] + " " + r[1] + " " + r[2] + " " + r[3]);
-                    //    //Console.ReadKey();
-                    //}
+                    Int32[] f = new Int32[250];
+                    
 
+
+                    if (r.Length > 10)
+                    {
+                        int roff = 0;
+                        for (int i = 0; i < r.Length / 4; i++)
+                        {
+                            f[i] = System.BitConverter.ToInt32(r, roff);
+                            roff += 4;
+                            //Console.Write(f[i] + " ");
+                        }
+
+                        RefreshChart(f);
+                        Console.WriteLine("Charts refreshed");
+                        Console.ReadKey();
+
+                    }
                     double pr = 100.0 * (double)(test_offset) / (double)test_array_offset;
 
                     //pokazuje ile % pliku juz zostalo odtworzonych
@@ -365,7 +413,6 @@ namespace ConsoleApp1DNS
                     {
                         ps[n] = 0;
                     }
-
                     
                     var r = ct.Send(ps);
                 }
