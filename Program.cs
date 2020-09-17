@@ -382,7 +382,7 @@ namespace ConsoleApp1DNS
                     
 
 
-                    if (r.Length > 10)
+                    if (r.Length > 1)
                     {
                         int roff = 0;
                         for (int i = 0; i < r.Length / 4; i++)
