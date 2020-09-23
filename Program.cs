@@ -48,10 +48,11 @@ namespace ConsoleApp1DNS
         static public UInt64 memcnt = 0;
         static public bool connection_ok = false;
 
-        static public string htm_page_path = @"C:\Users\Szymon\Downloads\Highcharts-8.2.0\examples\line-basic\index.htm";
-        static public string pre_htm = @"C:\Users\Szymon\Downloads\Highcharts-8.2.0\examples\line-basic\pre.txt";
-        static public string data_htm = @"C:\Users\Szymon\Downloads\Highcharts-8.2.0\examples\line-basic\data.txt";
-        static public string past_htm = @"C:\Users\Szymon\Downloads\Highcharts-8.2.0\examples\line-basic\past.txt";
+        static public string htm_page_path = @"C:\Users\sromanowski\Downloads\Highcharts-8.2.0\examples\line-basic\index.htm";
+
+        static public string pre_htm = @"C:\Users\sromanowski\Downloads\Highcharts-8.2.0\examples\line-basic\pre.txt";
+        static public string data_htm = @"C:\Users\sromanowski\Downloads\Highcharts-8.2.0\examples\line-basic\data.txt";
+        static public string past_htm = @"C:\Users\sromanowski\Downloads\Highcharts-8.2.0\examples\line-basic\past.txt";
 
         static public Client ct;
 
@@ -88,13 +89,13 @@ namespace ConsoleApp1DNS
             
 
             // adres i port mikrokontrolera w sieci lokalnej  
-            ct = new Client("192.168.0.20", 52001);
+            ct = new Client("192.168.1.102", 52001);
 
             while (true)
             {
 
                 // w tym folderze znajduja sie pliki z muzyka
-                string folder_search = @"G:\Różne";
+                string folder_search = @"C:\audiotests";
 
                 List<KeyValuePair<int, string>> dircnt = new List<KeyValuePair<int, string>>();
 
@@ -124,7 +125,7 @@ namespace ConsoleApp1DNS
                         Console.WriteLine(r.Key + " " + r.Value);
                         writeFileCnt++;
 
-                        if ((writeFileCnt % 20) == 0)
+                        if ((writeFileCnt % 1) == 0)
                         {
                             string s = Console.ReadLine();
                             if (Int32.TryParse(s, out fileKey))
@@ -158,7 +159,7 @@ namespace ConsoleApp1DNS
 
                 // w podanej lokalizacji tworze plik .wav, zawierajacy wartosci probek dzwieku
                 // te dane sa wysylane w swiat
-                var outfile = @"C:\naudio_test\test_wav.wav";
+                var outfile = @"C:\audiotests\test_wav.wav";
 
                 using (var reader = new Mp3FileReader(fileToPlay))
                 {
